@@ -1,0 +1,89 @@
+// Prisma schema do Notification Service
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Enums ----------
+
+enum ChannelType {
+  EMAIL
+  SMS
+  PUSH
+  WEBHOOK
+}
+
+enum NotificationStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  PARTIALLY_FAILED
+  FAILED
+  CANCELED
+}
+
+enum NotificationLogStatus {
+  PENDING
+  SENT
+  FAILED
+  RETRYING
+}
+
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+  CRITICAL
+}
+
+// ---------- Models ----------
+
+/// Representa uma solicitação de notificação. Pode disparar para múltiplos canais.
+model Notification {
+  id          String             @id @default(uuid()) @db.Uuid
+  recipient   String             @db.VarChar(255) // email, telefone, deviceId, dependendo do canal
+  subject     String?            @db.VarChar(500)
+  content     String             @db.Text
+  channels    ChannelType[]
+  status      NotificationStatus @default(PENDING)
+  priority    Priority           @default(NORMAL)
+  scheduledAt DateTime?
+  metadata    Json?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  logs NotificationLog[]
+
+  @@index([status])
+  @@index([recipient])
+  @@index([scheduledAt])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+/// Log de tentativa de envio por canal. Cada Notification tem N logs (1 por canal + retries).
+model NotificationLog {
+  id               String                @id @default(uuid()) @db.Uuid
+  notificationId   String                @db.Uuid
+  channel          ChannelType
+  status           NotificationLogStatus @default(PENDING)
+  attempts         Int                   @default(0)
+  errorMessage     String?               @db.Text
+  providerResponse Json?
+  sentAt           DateTime?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  @@index([notificationId])
+  @@index([channel, status])
+  @@index([status])
+  @@map("notification_logs")
+}
