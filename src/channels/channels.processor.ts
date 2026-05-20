@@ -76,7 +76,7 @@ export class ChannelsProcessor extends WorkerHost {
         recipient: notification.recipient,
         subject: notification.subject,
         content: notification.content,
-        metadata: notification.metadata as Prisma.JsonValue,
+        metadata: notification.metadata,
       });
 
       if (result.success) {

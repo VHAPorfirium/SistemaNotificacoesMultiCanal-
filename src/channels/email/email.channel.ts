@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ChannelType } from '@prisma/client';
-import { createTransport, Transporter } from 'nodemailer';
+import { createTransport, type Transporter } from 'nodemailer';
+import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 import { AppConfig } from '../../config/configuration';
 import {
   ChannelDispatchPayload,
@@ -14,7 +15,7 @@ export class EmailChannel implements NotificationChannel {
   readonly type = ChannelType.EMAIL;
 
   private readonly logger = new Logger(EmailChannel.name);
-  private readonly transporter: Transporter;
+  private readonly transporter: Transporter<SMTPTransport.SentMessageInfo>;
   private readonly from: string;
 
   constructor(config: ConfigService<AppConfig, true>) {
@@ -35,9 +36,7 @@ export class EmailChannel implements NotificationChannel {
     );
   }
 
-  async send(
-    payload: ChannelDispatchPayload,
-  ): Promise<ChannelDispatchResult> {
+  async send(payload: ChannelDispatchPayload): Promise<ChannelDispatchResult> {
     try {
       const info = await this.transporter.sendMail({
         from: this.from,

@@ -9,6 +9,12 @@ import { AppModule } from './../src/app.module';
  * - Postgres em localhost:5432
  * - Redis em localhost:6379
  */
+interface NotificationResponseBody {
+  id: string;
+  status: string;
+  logs: { channel: string }[];
+}
+
 describe('Notifications (e2e)', () => {
   let app: INestApplication<App>;
 
@@ -63,10 +69,11 @@ describe('Notifications (e2e)', () => {
         })
         .expect(202);
 
-      expect(res.body.id).toEqual(expect.any(String));
-      expect(res.body.status).toBe('PENDING');
-      expect(res.body.logs).toHaveLength(1);
-      expect(res.body.logs[0].channel).toBe('EMAIL');
+      const body = res.body as NotificationResponseBody;
+      expect(body.id).toEqual(expect.any(String));
+      expect(body.status).toBe('PENDING');
+      expect(body.logs).toHaveLength(1);
+      expect(body.logs[0].channel).toBe('EMAIL');
     });
   });
 
