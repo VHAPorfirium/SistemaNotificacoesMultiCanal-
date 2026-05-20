@@ -1,0 +1,74 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: notification-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: notification
+      POSTGRES_PASSWORD: notification
+      POSTGRES_DB: notification_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notification -d notification_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - notification-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: notification-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - notification-net
+
+  bull-board:
+    image: deadly0/bull-board:latest
+    container_name: notification-bull-board
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "3001:3000"
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_USE_TLS: "false"
+      BULL_PREFIX: bull
+    networks:
+      - notification-net
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: notification-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
+    networks:
+      - notification-net
+
+volumes:
+  postgres_data:
+    name: notification_postgres_data
+  redis_data:
+    name: notification_redis_data
+
+networks:
+  notification-net:
+    driver: bridge
