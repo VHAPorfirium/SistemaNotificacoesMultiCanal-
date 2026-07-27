@@ -36,22 +36,8 @@ services:
     networks:
       - notification-net
 
-  bull-board:
-    image: deadly0/bull-board:latest
-    container_name: notification-bull-board
-    restart: unless-stopped
-    depends_on:
-      redis:
-        condition: service_healthy
-    ports:
-      - "3001:3000"
-    environment:
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_USE_TLS: "false"
-      BULL_PREFIX: bull
-    networks:
-      - notification-net
+  # Bull Board agora vive dentro do app (Nest) em /admin/queues, com Basic Auth.
+  # Container externo removido pra evitar duplicação.
 
   mailhog:
     image: mailhog/mailhog:latest

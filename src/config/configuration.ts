@@ -19,6 +19,10 @@ export interface AppConfig {
   bull: {
     prefix: string;
   };
+  bullBoard: {
+    username: string;
+    password: string;
+  };
   smtp: {
     host: string;
     port: number;
@@ -31,6 +35,13 @@ export interface AppConfig {
     apiKey: string;
     jwtSecret: string;
     webhookSigningSecret: string;
+  };
+  throttle: {
+    ttl: number;
+    limit: number;
+  };
+  idempotency: {
+    ttlSeconds: number;
   };
 }
 
@@ -52,6 +63,10 @@ export default (): AppConfig => ({
   bull: {
     prefix: process.env.BULL_PREFIX ?? 'bull',
   },
+  bullBoard: {
+    username: process.env.BULL_BOARD_USER ?? 'admin',
+    password: process.env.BULL_BOARD_PASSWORD ?? 'admin',
+  },
   smtp: {
     host: process.env.SMTP_HOST ?? 'localhost',
     port: parseInt(process.env.SMTP_PORT ?? '1025', 10),
@@ -64,5 +79,12 @@ export default (): AppConfig => ({
     apiKey: process.env.API_KEY ?? '',
     jwtSecret: process.env.JWT_SECRET ?? '',
     webhookSigningSecret: process.env.WEBHOOK_SIGNING_SECRET ?? '',
+  },
+  throttle: {
+    ttl: parseInt(process.env.THROTTLE_TTL ?? '60000', 10),
+    limit: parseInt(process.env.THROTTLE_LIMIT ?? '100', 10),
+  },
+  idempotency: {
+    ttlSeconds: parseInt(process.env.IDEMPOTENCY_TTL_SECONDS ?? '86400', 10),
   },
 });
